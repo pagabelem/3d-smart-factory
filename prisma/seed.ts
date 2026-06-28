@@ -11,7 +11,7 @@ async function main() {
   
   // 1. Créer l'administrateur
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@3dsmartfactory.com' },
+  where: { email: 'admin@3dsmartfactory.com' },
     update: {},
     create: {
       email: 'admin@3dsmartfactory.com',
