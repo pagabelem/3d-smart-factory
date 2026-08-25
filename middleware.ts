@@ -1,17 +1,20 @@
-﻿import { auth } from '@/lib/auth'
+﻿import { auth } from '@/src/lib/auth'  // ← CHANGEMENT ICI
 import { NextResponse } from 'next/server'
 
 export default auth((req) => {
   const isLoggedIn = !!req.auth
   const { pathname } = req.nextUrl
 
-  const publicRoutes = ['/login']
+  const publicRoutes = ['/login', '/register']
   
   if (publicRoutes.includes(pathname)) {
     if (isLoggedIn) {
       const role = req.auth?.user?.role
-      const dashboardUrl = new URL(`/${role?.toLowerCase()}`, req.url)
-      return NextResponse.redirect(dashboardUrl)
+      // Rediriger vers le dashboard du rôle
+      if (role === 'ADMIN') return NextResponse.redirect(new URL('/dashboard/admin', req.url))
+      if (role === 'ENCADRANT') return NextResponse.redirect(new URL('/dashboard/encadrant', req.url))
+      if (role === 'STAGIAIRE') return NextResponse.redirect(new URL('/dashboard/stagiaire', req.url))
+      return NextResponse.redirect(new URL('/dashboard', req.url))
     }
     return NextResponse.next()
   }
@@ -26,15 +29,16 @@ export default auth((req) => {
   const isEncadrant = role === 'ENCADRANT'
   const isStagiaire = role === 'STAGIAIRE'
 
-  if (pathname.startsWith('/admin') && !isAdmin) {
+  // Protéger les routes par rôle
+  if (pathname.startsWith('/dashboard/admin') && !isAdmin) {
     return NextResponse.redirect(new URL('/unauthorized', req.url))
   }
 
-  if (pathname.startsWith('/encadrant') && !isEncadrant && !isAdmin) {
+  if (pathname.startsWith('/dashboard/encadrant') && !isEncadrant && !isAdmin) {
     return NextResponse.redirect(new URL('/unauthorized', req.url))
   }
 
-  if (pathname.startsWith('/stagiaire') && !isStagiaire && !isAdmin && !isEncadrant) {
+  if (pathname.startsWith('/dashboard/stagiaire') && !isStagiaire && !isAdmin && !isEncadrant) {
     return NextResponse.redirect(new URL('/unauthorized', req.url))
   }
 
@@ -42,5 +46,5 @@ export default auth((req) => {
 })
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)']
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)']
 }
