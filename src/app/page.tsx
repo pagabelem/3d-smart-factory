@@ -1,14 +1,30 @@
 import Link from "next/link"
+import Image from "next/image"
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-16">
+    <div
+      className="min-h-screen bg-cover bg-center bg-no-repeat relative"
+      style={{ backgroundImage: "url('/hero-bg.jpg')" }}
+    >
+      <div className="absolute inset-0 bg-black/50" />
+
+      <div className="container mx-auto px-4 py-16 relative z-10">
         <div className="text-center">
-          <h1 className="text-5xl font-bold text-gray-800 mb-4">
+          <div className="flex justify-center mb-6">
+            <Image
+              src="/logo.png"
+              alt="3D Smart Factory"
+              width={120}
+              height={120}
+              className="bg-white rounded-xl p-3"
+            />
+          </div>
+
+          <h1 className="text-5xl font-bold text-white mb-4">
             3D Smart Factory
           </h1>
-          <p className="text-xl text-gray-600 mb-8">
+          <p className="text-xl text-gray-200 mb-8">
             Plateforme de suivi intelligent des stagiaires
           </p>
           <div className="space-x-4">
@@ -19,10 +35,10 @@ export default function Home() {
               Connexion
             </Link>
             <Link
-              href="/dashboard"
+              href="/register"
               className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition"
             >
-              Dashboard
+              Inscription-Stagiaire
             </Link>
           </div>
         </div>

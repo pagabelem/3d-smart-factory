@@ -34,6 +34,14 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  dateDebutStage    DateTime?
+  dateFinStage      DateTime?
+  numeroCarteSejour String?  @unique
+
+  encadrantId       String?
+  encadrant         User?    @relation("Encadrement", fields: [encadrantId], references: [id])
+  stagiaires        User[]   @relation("Encadrement")
+
   teamMembers    TeamMember[]
   tasks          Task[]        @relation("AssignedTasks")
   ownedProjects  Project[]     @relation("Owner")
@@ -41,7 +49,7 @@ model User {
   messages       Message[]
   scores         Score[]
   alerts         Alert[]
-  
+
   // Compétition
   badges         UserBadge[]
   defis          DefiParticipation[]
@@ -177,18 +185,14 @@ model Score {
   @@unique([userId, projectId, date])
 }
 
-
-
-
-
 model Badge {
   id          String   @id @default(cuid())
-  name        String   // "Ninja du commit", "Documentation d'or"
+  name        String
   description String
-  icon        String   // emoji ou URL
-  xpReward    Int      // points XP gagnés
+  icon        String
+  xpReward    Int
   createdAt   DateTime @default(now())
-  
+
   userBadges  UserBadge[]
 }
 
@@ -197,10 +201,10 @@ model UserBadge {
   userId    String
   badgeId   String
   earnedAt  DateTime @default(now())
-  
+
   user      User     @relation(fields: [userId], references: [id])
   badge     Badge    @relation(fields: [badgeId], references: [id])
-  
+
   @@unique([userId, badgeId])
 }
 
@@ -212,7 +216,7 @@ model Defi {
   startDate   DateTime
   endDate     DateTime
   isActive    Boolean  @default(true)
-  
+
   participations DefiParticipation[]
 }
 
@@ -222,12 +226,7 @@ model DefiParticipation {
   defiId    String
   completed Boolean  @default(false)
   completedAt DateTime?
-  
+
   user      User     @relation(fields: [userId], references: [id])
   defi      Defi     @relation(fields: [defiId], references: [id])
 }
-
-
-
-
-
