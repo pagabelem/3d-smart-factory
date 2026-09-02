@@ -53,6 +53,17 @@ model User {
   // Compétition
   badges         UserBadge[]
   defis          DefiParticipation[]
+
+  rapports       Rapport[]
+
+  evaluationsRecues   Evaluation[] @relation("StagiaireEvaluations")
+  evaluationsDonnees  Evaluation[] @relation("EncadrantEvaluations")
+  feedbacksRecus   Feedback[] @relation("StagiaireFeedbacks")
+  feedbacksDonnes  Feedback[] @relation("EncadrantFeedbacks")
+
+  conversations Conversation[]
+
+  objectifs    Objectif[]
 }
 
 model Project {
@@ -74,6 +85,9 @@ model Project {
   livrables    Livrable[]
   alerts       Alert[]
   scores       Score[]
+  rapports     Rapport[]
+  evaluations  Evaluation[]
+  feedbacks    Feedback[]
 }
 
 model Team {
@@ -81,8 +95,89 @@ model Team {
   name      String
   projectId String
   project   Project  @relation(fields: [projectId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   members   TeamMember[]
+}
+
+model Objectif {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  target      Int
+  current     Int      @default(0)
+  unit        String
+  deadline    DateTime
+  completed   Boolean  @default(false)
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  content        String
+  conversationId String
+  senderId       String
+  iaSummary      String?
+  createdAt      DateTime @default(now())
+
+  sender         User     @relation(fields: [senderId], references: [id])
+}
+
+model Conversation {
+  id          String        @id @default(cuid())
+  userId      String
+  messages    Json
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  user        User          @relation(fields: [userId], references: [id])
+  chatMessages ChatMessage[]
+}
+
+model ChatMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String
+  content        String   @db.Text
+  createdAt      DateTime @default(now())
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+}
+
+model Feedback {
+  id          String   @id @default(cuid())
+  contenu     String   @db.Text
+  stagiaireId String
+  encadrantId String
+  projetId    String?
+  generatedAt DateTime @default(now())
+  vu          Boolean  @default(false)
+
+  stagiaire   User     @relation("StagiaireFeedbacks", fields: [stagiaireId], references: [id])
+  encadrant   User     @relation("EncadrantFeedbacks", fields: [encadrantId], references: [id])
+  projet      Project? @relation(fields: [projetId], references: [id])
+}
+
+model Evaluation {
+  id          String   @id @default(cuid())
+  note        Float
+  commentaire String?  @db.Text
+  stagiaireId String
+  projetId    String
+  encadrantId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  stagiaire   User     @relation("StagiaireEvaluations", fields: [stagiaireId], references: [id])
+  projet      Project  @relation(fields: [projetId], references: [id])
+  encadrant   User     @relation("EncadrantEvaluations", fields: [encadrantId], references: [id])
+
+  @@unique([stagiaireId, projetId, encadrantId])
 }
 
 model TeamMember {
@@ -148,17 +243,6 @@ model Livrable {
   project      Project  @relation(fields: [projectId], references: [id])
 }
 
-model Message {
-  id             String   @id @default(cuid())
-  content        String
-  conversationId String
-  senderId       String
-  iaSummary      String?
-  createdAt      DateTime @default(now())
-
-  sender         User     @relation(fields: [senderId], references: [id])
-}
-
 model Alert {
   id        String   @id @default(cuid())
   type      String
@@ -183,6 +267,21 @@ model Score {
   project   Project  @relation(fields: [projectId], references: [id])
 
   @@unique([userId, projectId, date])
+}
+
+model Rapport {
+  id          String   @id @default(cuid())
+  titre       String
+  type        String
+  contenu     String   @db.Text
+  statut      String   @default("en_attente")
+  date        DateTime @default(now())
+  projetId    String?
+  createdBy   String
+  createdAt   DateTime @default(now())
+
+  project     Project? @relation(fields: [projetId], references: [id])
+  user        User     @relation(fields: [createdBy], references: [id])
 }
 
 model Badge {
