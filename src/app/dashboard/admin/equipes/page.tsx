@@ -19,6 +19,11 @@ interface Stagiaire {
 interface Project {
   id: string
   name: string
+  owner?: {
+    id: string
+    name: string
+    email: string
+  }
 }
 
 interface Team {
@@ -82,6 +87,15 @@ export default function AdminEquipesPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleProjectChange = (projectId: string) => {
+    const selectedProject = projects.find((p) => p.id === projectId)
+    setFormData({
+      ...formData,
+      projectId,
+      encadrantId: selectedProject?.owner?.id || "",
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -178,7 +192,7 @@ export default function AdminEquipesPage() {
 
             <select
               value={formData.projectId}
-              onChange={(e) => setFormData({ ...formData, projectId: e.target.value })}
+              onChange={(e) => handleProjectChange(e.target.value)}
               className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             >
@@ -188,17 +202,24 @@ export default function AdminEquipesPage() {
               ))}
             </select>
 
-            <select
-              value={formData.encadrantId}
-              onChange={(e) => setFormData({ ...formData, encadrantId: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            >
-              <option value="">Sélectionner un encadrant</option>
-              {encadrants.map((e) => (
-                <option key={e.id} value={e.id}>{e.name}</option>
-              ))}
-            </select>
+            <div>
+              <select
+                value={formData.encadrantId}
+                onChange={(e) => setFormData({ ...formData, encadrantId: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                <option value="">Sélectionner un encadrant</option>
+                {encadrants.map((e) => (
+                  <option key={e.id} value={e.id}>{e.name}</option>
+                ))}
+              </select>
+              {formData.projectId && formData.encadrantId && (
+                <p className="text-xs text-green-600 mt-1">
+                  ✓ Encadrant du projet sélectionné automatiquement — modifiable si besoin
+                </p>
+              )}
+            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

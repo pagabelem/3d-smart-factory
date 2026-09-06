@@ -1,7 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable react-hooks/immutability */
-/* eslint-disable react/no-unescaped-entities */
-/* eslint-disable react-hooks/immutability */
 "use client"
 
 import { useEffect, useState } from "react"
@@ -20,7 +18,7 @@ interface Project {
   owner: { name: string; email: string }
   teams: { id: string; name: string; members: { user: { name: string } }[] }[]
   tasks: { id: string; status: string }[]
-  gitRepos: { id: string; name: string }[]
+  gitRepos: { id: string; name: string; url: string }[]
 }
 
 export default function AdminProjectsPage() {
@@ -33,10 +31,10 @@ export default function AdminProjectsPage() {
     name: "",
     description: "",
     ownerId: "",
+    gitUrl: "",
   })
   const [users, setUsers] = useState<{ id: string; name: string }[]>([])
 
-  // États pour le modal de suppression
   const [modalOpen, setModalOpen] = useState(false)
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -89,7 +87,7 @@ export default function AdminProjectsPage() {
         throw new Error(errorData.error || "Erreur lors de la création")
       }
       setShowForm(false)
-      setNewProject({ name: "", description: "", ownerId: "" })
+      setNewProject({ name: "", description: "", ownerId: "", gitUrl: "" })
       await fetchProjects()
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur inconnue")
@@ -103,7 +101,7 @@ export default function AdminProjectsPage() {
 
   const handleDelete = async () => {
     if (!projectToDelete) return
-    
+
     setDeleting(true)
     try {
       const res = await fetch(`/api/admin/projects/${projectToDelete}`, {
@@ -144,24 +142,23 @@ export default function AdminProjectsPage() {
     <div>
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold">📁 Gestion des Projets</h1>
+          <h1 className="text-3xl font-bold">Gestion des Projets</h1>
           <p className="text-gray-600 mt-1">Gérez tous les projets de la plateforme</p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
           className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
         >
-          {showForm ? "❌ Annuler" : "+ Nouveau Projet"}
+          {showForm ? "Annuler" : "+ Nouveau Projet"}
         </button>
       </div>
 
       {error && (
         <div className="bg-red-100 text-red-700 p-4 rounded-lg mb-6">
-          ❌ {error}
+          {error}
         </div>
       )}
 
-      {/* Formulaire de création */}
       {showForm && (
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
           <h2 className="text-xl font-semibold mb-4">Créer un nouveau projet</h2>
@@ -192,6 +189,18 @@ export default function AdminProjectsPage() {
                 <option key={user.id} value={user.id}>{user.name}</option>
               ))}
             </select>
+            <div>
+              <input
+                type="url"
+                placeholder="https://github.com/... ou https://gitlab.com/..."
+                value={newProject.gitUrl}
+                onChange={(e) => setNewProject({ ...newProject, gitUrl: e.target.value })}
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                URL du dépôt GitHub ou GitLab (optionnel)
+              </p>
+            </div>
             <button
               type="submit"
               className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition"
@@ -202,11 +211,9 @@ export default function AdminProjectsPage() {
         </div>
       )}
 
-      {/* Liste des projets */}
       <div className="grid grid-cols-1 gap-6">
         {projects.length === 0 ? (
           <div className="text-center text-gray-500 py-12 bg-white rounded-lg shadow-md">
-            <div className="text-4xl mb-4">📁</div>
             <p>Aucun projet créé pour le moment</p>
             <p className="text-sm">Créez votre premier projet pour commencer</p>
           </div>
@@ -214,7 +221,9 @@ export default function AdminProjectsPage() {
           projects.map((project) => {
             const completedTasks = project.tasks?.filter(t => t.status === "TERMINE").length || 0
             const totalTasks = project.tasks?.length || 0
-            
+            const hasGitRepo = project.gitRepos && project.gitRepos.length > 0
+            const gitUrl = hasGitRepo ? project.gitRepos[0].url : ""
+
             return (
               <div key={project.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
                 <div className="flex justify-between items-start">
@@ -226,37 +235,41 @@ export default function AdminProjectsPage() {
                       </span>
                       {project.scoreActivite !== null && (
                         <span className="text-sm text-gray-500">
-                          📊 {project.scoreActivite}% d'activité
+                          {project.scoreActivite}% d'activité
                         </span>
                       )}
                     </div>
                     <p className="text-gray-600 text-sm mt-1">{project.description || "Aucune description"}</p>
-                    
-                    <div className="flex flex-wrap gap-4 mt-3 text-sm">
+
+                    <div className="flex flex-wrap gap-4 mt-3 text-sm items-center">
                       <span className="text-gray-500">
-                        👤 {project.owner?.name || "Sans responsable"}
+                        {project.owner?.name || "Sans responsable"}
                       </span>
                       <span className="text-gray-400">|</span>
                       <span className="text-gray-500">
-                        👥 {project.teams?.length || 0} équipes
+                        {project.teams?.length || 0} équipes
                       </span>
                       <span className="text-gray-400">|</span>
                       <span className="text-gray-500">
-                        📝 {completedTasks}/{totalTasks} tâches terminées
+                        {completedTasks}/{totalTasks} tâches terminées
                       </span>
                       <span className="text-gray-400">|</span>
-                      <span className="text-gray-500">
-                        🔗 {project.gitRepos?.length || 0} dépôts
-                      </span>
+                      {hasGitRepo ? (
+                        <a href={gitUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                          Dépôt Git
+                        </a>
+                      ) : (
+                        <span className="text-gray-400">Aucun dépôt lié</span>
+                      )}
                     </div>
 
                     {project.summaryIA && (
                       <div className="mt-3 p-3 bg-blue-50 rounded-lg text-sm text-gray-700">
-                        🤖 <span className="font-medium">Résumé IA :</span> {project.summaryIA}
+                        <span className="font-medium">Résumé IA :</span> {project.summaryIA}
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="flex items-start gap-2 ml-4">
                     <Link
                       href={`/dashboard/admin/projets/${project.id}`}
@@ -278,7 +291,6 @@ export default function AdminProjectsPage() {
         )}
       </div>
 
-      {/* Modal de confirmation */}
       <ModalConfirm
         isOpen={modalOpen}
         onClose={() => {
@@ -287,8 +299,8 @@ export default function AdminProjectsPage() {
         }}
         onConfirm={handleDelete}
         title="Supprimer le projet"
-        message="Êtes-vous sûr de vouloir supprimer ce projet ? Cette action est irréversible et supprimera également toutes les données associées (équipes, tâches, commits, etc.)."
-        confirmText="Supprimer définitivement"
+        message="Etes-vous sur de vouloir supprimer ce projet ? Cette action est irreversible."
+        confirmText="Supprimer definitivement"
         cancelText="Annuler"
         confirmColor="red"
         loading={deleting}
