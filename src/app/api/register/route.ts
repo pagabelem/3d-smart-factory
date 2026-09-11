@@ -48,7 +48,7 @@ export async function POST(request: Request) {
 
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    const newUser = await prisma.user.create({
+        const newUser = await prisma.user.create({
       data: {
         name: `${prenom} ${nom}`,
         email,
@@ -64,6 +64,19 @@ export async function POST(request: Request) {
           },
         },
       },
+      include: {
+        encadrant: {
+          select: { name: true },
+        },
+      },
+    })
+
+    await sendWelcomeEmail({
+      to: newUser.email,
+      prenom,
+      encadrantName: newUser.encadrant?.name || "Non assigne",
+      dateDebut: new Date(dateDebutStage).toLocaleDateString("fr-FR"),
+      dateFin: new Date(dateFinStage).toLocaleDateString("fr-FR"),
     })
 
     return NextResponse.json(

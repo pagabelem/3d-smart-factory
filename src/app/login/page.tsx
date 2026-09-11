@@ -26,12 +26,10 @@ export default function LoginPage() {
       setError("Email ou mot de passe incorrect")
       setLoading(false)
     } else {
-      // Récupérer la session pour connaître le rôle
       const res = await fetch("/api/auth/session")
       const session = await res.json()
       const role = session?.user?.role
       
-      // Rediriger selon le rôle
       switch (role) {
         case "ADMIN":
           router.push("/dashboard/admin")
@@ -95,10 +93,6 @@ export default function LoginPage() {
             {loading ? "Connexion en cours..." : "Se connecter"}
           </button>
         </form>
-        
-        <div className="mt-6 text-center text-sm text-gray-500">
-          <p>Compte admin : admin@3dsmartfactory.com / admin123</p>
-        </div>
       </div>
     </div>
   )
